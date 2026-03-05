@@ -96,7 +96,7 @@ public:
     // `handle_exception` callback should identify such case using
     // IsTerminatedOrTerminating() before actually handle the exception
     template<typename T, typename U = decltype(HandleThrow)>
-    inline void CallIntoModule(T&& call, U&& handle_exception = HandleThrow)
+    inline void CallIntoModule(T&& call, U&& handle_exception = HandleThrow, bool allowException = true)
     {
         int openHandleScopesBefore = openHandleScopes;
         int openCallbackScopesBefore = openCallbackScopes;
@@ -104,7 +104,7 @@ public:
         call(this);
         CHECK_EQ(openHandleScopes, openHandleScopesBefore);
         CHECK_EQ(openCallbackScopes, openCallbackScopesBefore);
-        if (!lastException.IsEmpty()) {
+        if (allowException && !lastException.IsEmpty()) {
             handle_exception(this, lastException.Get(this->isolate));
             lastException.Reset();
         }
