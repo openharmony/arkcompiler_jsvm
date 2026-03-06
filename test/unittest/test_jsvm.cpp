@@ -1757,11 +1757,11 @@ HWTEST_F(JSVMTestWithoutHandleScope, JSVMFinalizerAndErrorTest, TestSize.Level1)
     ASSERT_NE(status, JSVM_OK);
 
     bool isExceptionPending = false;
-    JSVMTEST_CALL(OH_JSVM_IsExceptionPending(env, &isExceptionPending));
+    OH_JSVM_IsExceptionPending(env, &isExceptionPending);
     ASSERT_TRUE(isExceptionPending);
 
-    JSVMTEST_CALL(OH_JSVM_CloseHandleScope(env, handleScope));
+    OH_JSVM_CloseHandleScope(env, handleScope);
 
-    JSVMTEST_CALL(OH_JSVM_MemoryPressureNotification(env, JSVM_MEMORY_PRESSURE_LEVEL_CRITICAL));
+    OH_JSVM_MemoryPressureNotification(env, JSVM_MEMORY_PRESSURE_LEVEL_CRITICAL);
 }
 
