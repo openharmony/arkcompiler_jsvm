@@ -170,6 +170,42 @@ static JSVM_PropertyDescriptor property_descriptors[] = {
     { "print", NULL, &print_cb, NULL, NULL, NULL, JSVM_DEFAULT },
 };
 
+class JSVMTestWithoutHandleScope : public testing::Test {
+public:
+    static void SetUpTestCase()
+    {
+        GTEST_LOG_(INFO) << "JSVMTest SetUpTestCase";
+        JSVM_InitOptions init_options {};
+        OH_JSVM_Init(&init_options);
+    }
+
+    static void TearDownTestCase() {}
+
+    void SetUp() override
+    {
+        OH_JSVM_CreateVM(nullptr, &vm);
+        // propertyCount is 3
+        OH_JSVM_CreateEnv(vm, 3, property_descriptors, &env);
+        OH_JSVM_OpenVMScope(vm, &vm_scope);
+        OH_JSVM_OpenEnvScope(env, &env_scope);
+        jsvm_env = env;
+    }
+    void TearDown() override
+    {
+        GTEST_LOG_(INFO) << "JSVMTest TearDown";
+        OH_JSVM_CloseEnvScope(env, env_scope);
+        OH_JSVM_CloseVMScope(vm, vm_scope);
+        OH_JSVM_DestroyEnv(env);
+        OH_JSVM_DestroyVM(vm);
+    }
+
+protected:
+    JSVM_Env env = nullptr;
+    JSVM_VM vm = nullptr;
+    JSVM_EnvScope env_scope = nullptr;
+    JSVM_VMScope vm_scope = nullptr;
+};
+
 class JSVMTest : public testing::Test {
 public:
     static void SetUpTestCase()
@@ -1697,3 +1733,35 @@ HWTEST_F(JSVMTest, JSVMCloseHandleScopeUAF, TestSize.Level1)
 
     JSVMTEST_CALL(OH_JSVM_CloseHandleScope(env, handle));
 }
+
+HWTEST_F(JSVMTestWithoutHandleScope, JSVMFinalizerAndErrorTest, TestSize.Level1)
+{
+    JSVM_HandleScope handleScope;
+    JSVMTEST_CALL(OH_JSVM_OpenHandleScope(env, &handleScope));
+
+    JSVM_Value obj;
+    JSVMTEST_CALL(OH_JSVM_CreateObject(env, &obj));
+
+    JSVMTEST_CALL(OH_JSVM_AddFinalizer(env, obj, nullptr,
+        [](JSVM_Env env, void* finalizeData, void* finalizeHint) {
+            GTEST_LOG_(INFO) << "JSVMFinalizerAndErrorTest finalizer called";
+        }, nullptr, nullptr));
+
+    JSVM_Value jsSrc;
+    const char* str = "function {";
+    JSVMTEST_CALL(OH_JSVM_CreateStringUtf8(env, str, strlen(str), &jsSrc));
+
+    JSVM_Script script;
+    bool cacheRejected = false;
+    JSVM_Status status = OH_JSVM_CompileScript(env, jsSrc, nullptr, 0, true, &cacheRejected, &script);
+    ASSERT_NE(status, JSVM_OK);
+
+    bool isExceptionPending = false;
+    OH_JSVM_IsExceptionPending(env, &isExceptionPending);
+    ASSERT_TRUE(isExceptionPending);
+
+    OH_JSVM_CloseHandleScope(env, handleScope);
+
+    OH_JSVM_MemoryPressureNotification(env, JSVM_MEMORY_PRESSURE_LEVEL_CRITICAL);
+}
+
