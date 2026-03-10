@@ -69,6 +69,11 @@ set (platform_sources
   "src/platform/platform_ohos.cpp"
 )
 
+set (jsvm_dfx_sources
+  "src/dfx/parse_jitcode.cpp"
+  "src/dfx/jsvm_dfx_api.cpp"
+)
+
 # 添加动态库搜索路径
 set (LIB_DIRS
   "${LIB_ROOT_DIR}/obj/arkcompiler/jsvm"
@@ -93,6 +98,7 @@ add_library(jsvm
   ${platform_sources}
   ${jsvm_sources}
   ${jsvm_inspector_sources}
+  ${jsvm_dfx_sources}
 )
 
 target_link_options(jsvm

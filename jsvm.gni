@@ -26,6 +26,11 @@ jsvm_inspector_sources = [
   "src/inspector/js_native_api_v8_inspector.cpp",
 ]
 
+jsvm_dfx_sources = [
+  "src/dfx/parse_jitcode.cpp",
+  "src/dfx/jsvm_dfx_api.cpp",
+]
+
 declare_args() {
   jsvm_shared_libuv = true
   enable_debug = false
