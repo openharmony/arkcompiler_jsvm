@@ -75,6 +75,7 @@ set (LIB_DIRS
   "${LIB_ROOT_DIR}/obj/third_party/zlib"
   "${LIB_ROOT_DIR}/hiviewdfx/hilog_override"
   "${LIB_ROOT_DIR}/hiviewdfx/hilog"
+  "${LIB_ROOT_DIR}/hiviewdfx/hisysevent"
   "${LIB_ROOT_DIR}/resourceschedule/resource_schedule_service"
   "${LIB_ROOT_DIR}/startup/init"
   "${LIB_ROOT_DIR}/hiviewdfx/hitrace/"
@@ -114,6 +115,7 @@ target_link_libraries(jsvm
   libssl_openssl.z.so
   libv8_shared.so
   libhilog.so
+  libhisysevent.z.so
   c++_static
 )
 else()
@@ -130,6 +132,7 @@ target_link_libraries(jsvm
   libssl_openssl.z.so
   libv8_shared.so
   libhilog.so
+  libhisysevent.z.so
   c++_static
 )
 endif()
