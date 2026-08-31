@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "jsvm_log.h"
+#include "parse_jit_vma_addr.h"
 #include "parse_jitcode.h"
 
 namespace jsvm {
@@ -55,16 +56,23 @@ static std::pair<uintptr_t, uintptr_t> FindVMAInProcMaps(uint32_t pid, const std
         if (line.find(vmaName) != std::string::npos) {
             // parse start address
             size_t dashPos = line.find('-');
-            if (dashPos == std::string::npos) {
+            if (dashPos == std::string::npos || dashPos == 0) {
                 continue;
             }
-            size_t endPos = line.find(' ');
+            size_t spacePos = line.find(' ', dashPos);
+            if (spacePos == std::string::npos || spacePos <= dashPos + 1) {
+                continue;
+            }
             std::string startAddrStr = line.substr(0, dashPos);
-            std::string endAddrStr = line.substr(dashPos + 1, endPos);
-            // convert address string to uint64_t
-            constexpr int kNumberBase = 16;
-            res.first = static_cast<uintptr_t>(std::stoull(startAddrStr, nullptr, kNumberBase));
-            res.second = static_cast<uintptr_t>(std::stoull(endAddrStr, nullptr, kNumberBase));
+            std::string endAddrStr = line.substr(dashPos + 1, spacePos - dashPos - 1);
+            uint64_t startAddr = 0;
+            uint64_t endAddr = 0;
+            if (!ParseJitVmaAddr(startAddrStr, startAddr) || !ParseJitVmaAddr(endAddrStr, endAddr)) {
+                LOG(Error) << "invalid VMA address in maps: " << startAddrStr << "-" << endAddrStr;
+                continue;
+            }
+            res.first = static_cast<uintptr_t>(startAddr);
+            res.second = static_cast<uintptr_t>(endAddr);
             return res;
         }
     }
